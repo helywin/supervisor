@@ -1,0 +1,143 @@
+{
+  "start": [
+    "mode_com"
+  ],
+  "modes": [
+    {
+      "name": "mode_com",
+      "description": "公共模块",
+      "executables": [
+        {
+          "name": "livox_ros_driver_node",
+          "path": "/data/garbage_auto_ws/install/lib/livox_ros_driver/",
+          "restart": false
+        },
+        {
+          "name": "TaskFinishExcel.py",
+          "path": "/data/garbage_auto_ws/install/lib/Save_Excel/",
+          "executor": "python2"
+        },
+        {
+          "name": "SysFauStatusExcel.py",
+          "path": "/data/garbage_auto_ws/install/lib/Save_Excel/",
+          "executor": "python2"
+        }
+      ]
+    },
+    {
+      "name": "mode_1",
+      "description": "行车1的模块",
+      "executables": [
+        {
+          "name": "fault_monitor",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/fault_monitor/"
+        },
+        {
+          "name": "perception",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/perception/"
+        },
+        {
+          "name": "task_planner",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/task_planner/"
+        },
+        {
+          "name": "grab_weight_publish",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/grab_weight_publish/"
+        },
+        {
+          "name": "ocr_detector.py",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/grab_image_detector/",
+          "executor": "python3",
+          "params": ""
+        },
+        {
+          "name": "burner_volume_detector",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/burner_volume_detector/"
+        },
+        {
+          "name": "laser_info",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/laser_measure/"
+        },
+        {
+          "name": "move_controller",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/move_controller/"
+        },
+        {
+          "name": "move_plc_ctr",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/move_controller/"
+        },
+        {
+          "name": "door_info",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/door_info/"
+        },
+        {
+          "name": "move_monitor_node",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/move_monitor_node/"
+        },
+        {
+          "name": "fault_monitor_ros",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/fault_monitor_ros/"
+        }
+      ]
+    },
+    {
+      "name": "mode_2",
+      "description": "行车2的模块",
+      "variables": {
+        "car_dir": "/data/garbage_auto_ws/car_2"
+      },
+      "executables": [
+        {
+          "name": "fault_monitor",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/fault_monitor/"
+        },
+        {
+          "name": "perception",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/perception/"
+        },
+        {
+          "name": "task_planner",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/task_planner/"
+        },
+        {
+          "name": "grab_weight_publish",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/grab_weight_publish/"
+        },
+        {
+          "name": "ocr_detector.py",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/grab_image_detector/",
+          "executor": "python3",
+          "params": ""
+        },
+        {
+          "name": "burner_volume_detector",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/burner_volume_detector/"
+        },
+        {
+          "name": "laser_info",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/laser_measure/"
+        },
+        {
+          "name": "move_controller",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/move_controller/"
+        },
+        {
+          "name": "move_plc_ctr",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/move_controller/"
+        },
+        {
+          "name": "door_info",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/door_info/"
+        },
+        {
+          "name": "move_monitor_node",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/move_monitor_node/"
+        },
+        {
+          "name": "fault_monitor_ros",
+          "path": "/data/garbage_auto_ws/car_2/install/lib/fault_monitor_ros/"
+        }
+      ]
+    }
+  ]
+}
