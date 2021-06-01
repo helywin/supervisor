@@ -59,23 +59,37 @@ void SupervisordPrivate::createProcesses()
     for (const auto &item : mConf["modes"]) {
         std::string name = item["name"];
         mProcessList[name] = std::list<QProcess *>();
-        for (const auto &proc : item["executables"]) {
+        for (const auto &object : item["executables"]) {
             auto process = new QProcess(q);
             mProcessList[name].emplace_back(process);
             QString command;
-            if (proc.contains("executor")) {
-                command += QString::fromStdString(proc["executor"]) + " ";
+            if (object.contains("executor")) {
+                command += QString::fromStdString(object["executor"]) + " ";
             }
-            QString path = QString::fromStdString(proc["path"]);
+            QString path = QString::fromStdString(object["path"]);
             if (!path.endsWith('/')) {
                 path += "/";
             }
-            QString procName = QString::fromStdString(proc["name"]);
+            QString procName = QString::fromStdString(object["name"]);
             process->setProperty("name", procName);
             command += path + procName;
             process->setProgram(command);
-            if (proc.contains("restart")) {
-                process->setProperty("restart", proc["restart"].get<bool>());
+            if (object.contains("working_dir")) {
+                process->setWorkingDirectory(QString::fromStdString(object["working_dir"]));
+            }
+            if (object.contains("detach")) {
+                process->setProperty("detach", QString::fromStdString(object["detach"]));
+            } else {
+                process->setProperty("detach", false);
+            }
+            if (object.contains("stdout")) {
+                process->setStandardOutputFile(QString::fromStdString(object["stdout"]));
+            }
+            if (object.contains("stderr")) {
+                process->setStandardErrorFile(QString::fromStdString(object["stderr"]));
+            }
+            if (object.contains("restart")) {
+                process->setProperty("restart", object["restart"].get<bool>());
             } else {
                 process->setProperty("restart", false);
             }
@@ -92,9 +106,13 @@ void SupervisordPrivate::createProcesses()
 void SupervisordPrivate::startProcesses(const std::string &mode)
 {
     for (auto process : mProcessList[mode]) {
-        process->start(QIODevice::ReadOnly);
-        std::cout << "start: " << process->program().toStdString() <<
-                  " pid:" << process->pid() << std::endl;
+        if (process->property("detach").toBool()) {
+            QProcess::startDetached(process->program());
+        } else {
+            process->start(QIODevice::ReadOnly);
+            std::cout << "start: " << process->program().toStdString() <<
+                      " pid:" << process->pid() << std::endl;
+        }
     }
 }
 
@@ -166,6 +184,9 @@ int Supervisord::exec()
 {
     Q_D(Supervisord);
     QCoreApplication app(d->mArgc, d->mArgv);
+    if (d->mConf.contains("start_ros_core") && d->mConf["start_ros_core"].get<bool>()) {
+        system("gnome-terminal -x bash -c 'roscore'&");
+    }
     QTimer::singleShot(100, [this] {
         d_ptr->prepare();
     });
@@ -176,7 +197,12 @@ void Supervisord::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatu
 {
     auto process = qobject_cast<QProcess *>(sender());
     std::cout << "process " << process->program().toStdString() << " "
-              << "finished: " << process->errorString().toStdString() << std::endl;
+              << "finished: ";
+    if (process->error() == QProcess::UnknownError) {
+        std::cout << "normal exit" << std::endl;
+    } else {
+        std::cout << process->errorString().toStdString() << std::endl;
+    }
     if (process->property("restart").toBool()) {
         QTimer::singleShot(1000, [process] {
             process->start();
