@@ -1,4 +1,5 @@
 {
+  "port": 33496,
   "start_ros_core": true,
   "start": [
     "mode_com"

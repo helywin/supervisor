@@ -5,5 +5,4 @@ add_executable(superv
 target_link_libraries(superv
         json
         cxxopts
-        yaml-cpp
-        rt)
+        )

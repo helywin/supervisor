@@ -8,5 +8,4 @@ target_link_libraries(supervd
         Qt5::Network
         json
         cxxopts
-        yaml-cpp
-        rt)
+        )

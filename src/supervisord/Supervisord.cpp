@@ -3,7 +3,7 @@
 //
 
 #include "Supervisord.hpp"
-#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/process.hpp>
 #include <QCoreApplication>
 #include <iostream>
 #include <fstream>
@@ -46,7 +46,27 @@ SupervisordPrivate::SupervisordPrivate(Supervisord *p) :
 
 void SupervisordPrivate::onReadyRead()
 {
-    QByteArray array = mSocket->readAll();
+    while (mSocket->hasPendingDatagrams()) {
+        std::cout << "recv datagram" << std::endl;
+        QByteArray array;
+        array.resize((int) mSocket->pendingDatagramSize());
+        mSocket->readDatagram(array.data(), array.size());
+        auto object = json::parse(array.data());
+        if (!object.contains("mode_name") ||
+            !object.contains("enable")) {
+            std::cout << "bad json object" << std::endl;
+            return;
+        }
+        if (mProcessList.find(object["mode_name"]) == mProcessList.end()) {
+            std::cout << "mode not exist " << object["mode_name"] << std::endl;
+            return;
+        }
+        if (object["enable"].get<bool>()) {
+            startProcesses(object["mode_name"]);
+        } else {
+            stopProcesses(object["mode_name"]);
+        }
+    }
 
 }
 
@@ -109,6 +129,7 @@ void SupervisordPrivate::startProcesses(const std::string &mode)
         if (process->property("detach").toBool()) {
             QProcess::startDetached(process->program());
         } else {
+            process->setProperty("manually_close", false);
             process->start(QIODevice::ReadOnly);
             std::cout << "start: " << process->program().toStdString() <<
                       " pid:" << process->pid() << std::endl;
@@ -120,6 +141,7 @@ void SupervisordPrivate::stopProcesses(const std::string &mode)
 {
     for (auto process : mProcessList[mode]) {
         if (process->isOpen()) {
+            process->setProperty("manually_close", true);
             process->close();
         }
     }
@@ -130,6 +152,7 @@ void SupervisordPrivate::stopAllProcesses()
     for (auto &list : mProcessList) {
         for (auto process : list.second) {
             if (process->isOpen()) {
+                process->setProperty("manually_close", true);
                 process->close();
             }
         }
@@ -138,9 +161,20 @@ void SupervisordPrivate::stopAllProcesses()
 
 void SupervisordPrivate::prepare()
 {
+    Q_Q(Supervisord);
     for (const auto &mode : mCurrentModes) {
         startProcesses(mode);
     }
+    mSocket = new QUdpSocket(q);
+    if (!mSocket->bind(mConf["port"].get<int>())) {
+        if (mSocket->error() == QUdpSocket::AddressInUseError) {
+            std::cout << "已经有相同的实例在运行或者端口33496别占用" << std::endl;
+            QCoreApplication::quit();
+        }
+    }
+    QObject::connect(mSocket, &QUdpSocket::readyRead, [this] {
+        onReadyRead();
+    });
 }
 
 Supervisord::Supervisord(int argc, char **argv) :
@@ -159,17 +193,7 @@ Supervisord::Supervisord(int argc, char **argv) :
         exit(-1);
     }
     is >> d->mConf;
-    d->mSocket = new QUdpSocket(this);
-    if (!d->mSocket->bind(QHostAddress::AnyIPv4, 33496)) {
-        if (d->mSocket->error() == QUdpSocket::AddressInUseError) {
-            std::cout << "已经有相同的实例在运行或者端口33496别占用" << std::endl;
-            QCoreApplication::quit();
-        }
-    }
     d->createProcesses();
-    connect(d->mSocket, &QUdpSocket::readyRead, [this] {
-        d_ptr->onReadyRead();
-    });
 }
 
 Supervisord::~Supervisord()
@@ -203,7 +227,8 @@ void Supervisord::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatu
     } else {
         std::cout << process->errorString().toStdString() << std::endl;
     }
-    if (process->property("restart").toBool()) {
+    if (process->property("restart").toBool() &&
+        !process->property("manually_close").toBool()) {
         QTimer::singleShot(1000, [process] {
             process->start();
             std::cout << "restart " << process->program().toStdString() << " pid:"
