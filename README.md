@@ -22,7 +22,7 @@
 模拟报文发送
 
 ```bash
-echo "{\"mode_name\":\"mode_1\",\"enable\":true}" | nc -u 127.0.0.1 33446
+echo "{\"mode_name\":\"mode_1\",\"enable\":true}" | nc -u 127.0.0.1 33496
 ```
 
 tcp查看工具

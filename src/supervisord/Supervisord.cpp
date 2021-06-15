@@ -8,11 +8,15 @@
 #include <iostream>
 #include <fstream>
 #include <QUdpSocket>
+#include <QHostAddress>
 #include <QProcess>
 #include <QTimer>
 #include <json.hpp>
 #include <map>
 #include <unistd.h>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 using json = nlohmann::json;
 
@@ -25,14 +29,15 @@ public:
     char **mArgv;
     QUdpSocket *mSocket;
     json mConf;
-    std::list<std::string> mCurrentModes;
-    std::map<std::string, std::list<QProcess *>> mProcessList;
+    QList<QString> mAutoStart;
+    QList<QString> mCurrentModes;
+    QMap<QString, QList<QProcess *>> mProcessList;
 
     explicit SupervisordPrivate(Supervisord *p);
     void onReadyRead();
     void createProcesses();
-    void startProcesses(const std::string &mode);
-    void stopProcesses(const std::string &mode);
+    void startProcesses(const QString &mode);
+    void stopProcesses(const QString &mode);
     void stopAllProcesses();
     void prepare();
 };
@@ -50,22 +55,52 @@ void SupervisordPrivate::onReadyRead()
         std::cout << "recv datagram" << std::endl;
         QByteArray array;
         array.resize((int) mSocket->pendingDatagramSize());
-        mSocket->readDatagram(array.data(), array.size());
-        auto object = json::parse(array.data());
-        if (!object.contains("mode_name") ||
-            !object.contains("enable")) {
-            std::cout << "bad json object" << std::endl;
-            return;
-        }
-        if (mProcessList.find(object["mode_name"]) == mProcessList.end()) {
-            std::cout << "mode not exist " << object["mode_name"] << std::endl;
-            return;
-        }
-        if (object["enable"].get<bool>()) {
-            startProcesses(object["mode_name"]);
+        QHostAddress address;
+        quint16 port;
+        mSocket->readDatagram(array.data(), array.size(), &address, &port);
+        QJsonDocument doc = QJsonDocument::fromJson(array);
+        auto object = doc.object();
+        QJsonObject response;
+        if (!object.contains("command")) {
+            response["error"] = true;
+            response["error_string"] = "不包含命令报文";
+        } else if (object["command"] == "query") {
+
+        } else if (object["command"] == "control") {
+            if (!object.contains("mode_name") ||
+                !object.contains("enable")) {
+                std::cout << "bad json object" << std::endl;
+                return;
+            }
+            if (!mProcessList.contains(object["mode_name"].toString())) {
+                std::cout << "mode not exist " << object["mode_name"].toString().toStdString()
+                          << std::endl;
+                return;
+            }
+            if (object["enable"].toBool()) {
+                startProcesses(object["mode_name"].toString());
+            } else {
+                stopProcesses(object["mode_name"].toString());
+            }
         } else {
-            stopProcesses(object["mode_name"]);
+            response["error"] = true;
+            response["error_string"] = "报文命令错误";
         }
+
+        QJsonArray total;
+        for (const auto &key : mProcessList.keys()) {
+            total.append(key);
+        }
+        QJsonArray enabled;
+        for (const auto &key : mCurrentModes) {
+            enabled.append(key);
+        }
+        QJsonObject status;
+        status["total"] = total;
+        status["enabled"] = enabled;
+        response["status"] = status;
+        QJsonDocument sendDoc(response);
+        mSocket->writeDatagram(sendDoc.toJson(), address, port);
     }
 
 }
@@ -74,14 +109,14 @@ void SupervisordPrivate::createProcesses()
 {
     Q_Q(Supervisord);
     for (const auto &item : mConf["start"]) {
-        mCurrentModes.push_back(item);
+        mAutoStart.append(QString::fromStdString(item));
     }
     for (const auto &item : mConf["modes"]) {
-        std::string name = item["name"];
-        mProcessList[name] = std::list<QProcess *>();
+        QString name = QString::fromStdString(item["name"]);
+        mProcessList[name] = QList<QProcess *>();
         for (const auto &object : item["executables"]) {
             auto process = new QProcess(q);
-            mProcessList[name].emplace_back(process);
+            mProcessList[name].append(process);
             QString command;
             if (object.contains("executor")) {
                 command += QString::fromStdString(object["executor"]) + " ";
@@ -123,8 +158,13 @@ void SupervisordPrivate::createProcesses()
 }
 
 
-void SupervisordPrivate::startProcesses(const std::string &mode)
+void SupervisordPrivate::startProcesses(const QString &mode)
 {
+    if (mCurrentModes.contains(mode)) {
+        return;
+    } else {
+        mCurrentModes.append(mode);
+    }
     for (auto process : mProcessList[mode]) {
         if (process->property("detach").toBool()) {
             QProcess::startDetached(process->program());
@@ -137,8 +177,13 @@ void SupervisordPrivate::startProcesses(const std::string &mode)
     }
 }
 
-void SupervisordPrivate::stopProcesses(const std::string &mode)
+void SupervisordPrivate::stopProcesses(const QString &mode)
 {
+    if (!mCurrentModes.contains(mode)) {
+        return;
+    } else {
+        mCurrentModes.removeOne(mode);
+    }
     for (auto process : mProcessList[mode]) {
         if (process->isOpen()) {
             process->setProperty("manually_close", true);
@@ -150,19 +195,20 @@ void SupervisordPrivate::stopProcesses(const std::string &mode)
 void SupervisordPrivate::stopAllProcesses()
 {
     for (auto &list : mProcessList) {
-        for (auto process : list.second) {
+        for (auto process : list) {
             if (process->isOpen()) {
                 process->setProperty("manually_close", true);
                 process->close();
             }
         }
     }
+    mCurrentModes.clear();
 }
 
 void SupervisordPrivate::prepare()
 {
     Q_Q(Supervisord);
-    for (const auto &mode : mCurrentModes) {
+    for (const auto &mode : mAutoStart) {
         startProcesses(mode);
     }
     mSocket = new QUdpSocket(q);

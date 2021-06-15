@@ -26,8 +26,7 @@
         },
         {
           "name": "garbage_ui",
-          "path": "/data/garbage_auto_ws/install/lib/garbage_ui/",
-          "working_dir": "/data/garbage_auto_ws/install/lib/garbage_ui/",
+          "path": "/home/jiang/code/garbage_ui/src/garbage_ui/build/debug/devel/lib/garbage_ui",
           "stdout": "/home/jiang/garbage.log",
           "stderr": "/home/jiang/garbage.err"
         }
