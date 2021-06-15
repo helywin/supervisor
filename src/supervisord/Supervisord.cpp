@@ -148,6 +148,11 @@ void SupervisordPrivate::createProcesses()
             } else {
                 process->setProperty("restart", false);
             }
+            if (object.contains("delay")) {
+                process->setProperty("delay", object["delay"].get<int>());
+            } else {
+                process->setProperty("delay", 0);
+            }
             std::cout << "create: " << command.toStdString() << std::endl;
             QObject::connect(process, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>
             (&QProcess::finished), q, &Supervisord::onProcessFinished);
@@ -170,9 +175,12 @@ void SupervisordPrivate::startProcesses(const QString &mode)
             QProcess::startDetached(process->program());
         } else {
             process->setProperty("manually_close", false);
-            process->start(QIODevice::ReadOnly);
-            std::cout << "start: " << process->program().toStdString() <<
-                      " pid:" << process->pid() << std::endl;
+            int delay = process->property("delay").toInt();
+            QTimer::singleShot(delay, [process] {
+                process->start(QIODevice::ReadOnly);
+                std::cout << "start: " << process->program().toStdString() <<
+                          " pid:" << process->pid() << std::endl;
+            });
         }
     }
 }
