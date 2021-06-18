@@ -116,6 +116,8 @@ void SupervisordPrivate::createProcesses()
         mProcessList[name] = QList<QProcess *>();
         for (const auto &object : item["executables"]) {
             auto process = new QProcess(q);
+            process->setEnvironment(QProcess::systemEnvironment());
+            qDebug() << process->environment();
             mProcessList[name].append(process);
             QString command;
             if (object.contains("executor")) {
@@ -152,6 +154,13 @@ void SupervisordPrivate::createProcesses()
                 process->setProperty("delay", object["delay"].get<int>());
             } else {
                 process->setProperty("delay", 0);
+            }
+            if (object.contains("params")) {
+                QStringList params;
+                for (const auto &param: object["params"]) {
+                    params << QString::fromStdString(param);
+                }
+                process->setArguments(params);
             }
             std::cout << "create: " << command.toStdString() << std::endl;
             QObject::connect(process, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>

@@ -22,15 +22,21 @@ void SupervisorPrivate::loadSettings()
 
 }
 
-Supervisor::Supervisor(int argc, char **argv) :
+Supervisor::Supervisor(int argc, char *argv[]) :
         d(new SupervisorPrivate)
 {
-    cxxopts::Options options("Superv", "进程管理工具命令行");
-    options.add_options()
-            ("s,status", "")
-            ("l,list", "Int param", cxxopts::value<int>())
-            ("e,enable", "File name", cxxopts::value<std::string>())
-            ("d,disable", "Verbose output", cxxopts::value<bool>()->default_value("false"));
+    if (argc < 2) {
+        std::cout << "supervisor命令：\n"
+                  << "\tlist  -- 查看所有启动配置和运行中的配置\n"
+                  << "\tstart -- 启动指定配置\n"
+                  << "\tstart -- 停止指定配置" << std::endl;
+        exit(0);
+    }
+    if (argc == 2 && std::string(argv[1]) == "list") {
+
+    } else if (argc == 3 && std::string(argv[1]) == "list") {
+
+    }
 }
 
 Supervisor::~Supervisor()

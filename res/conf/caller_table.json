@@ -2,9 +2,48 @@
   "port": 33496,
   "start_ros_core": true,
   "start": [
-    "mode_com"
+    "agv"
   ],
   "modes": [
+    {
+      "name": "agv",
+      "description": "AGV小车启动",
+      "executables": [
+        {
+          "name": "map_viewer",
+          "path": "/data/cleaner_ws/install_nav/lib/global_path_planner",
+          "working_dir":"/data/cleaner_ws/install_nav/lib/global_path_planner",
+          "delay": 1000
+        },
+        {
+          "name": "global_path_planner",
+          "path": "/data/cleaner_ws/install_nav/lib/global_path_planner",
+          "working_dir":"/data/cleaner_ws/install_nav/lib/global_path_planner",
+          "delay": 1000
+        },
+        {
+          "name": "rslidar_sdk_node_xyzir",
+          "path": "/data/cleaner_ws/install_nav/lib/lidar_receiver",
+          "working_dir":"/data/cleaner_ws/install_nav/lib/lidar_receiver",
+          "params": ["middlemiddletop"],
+          "delay": 1000,
+          "stdout": "/home/jiang/lidar.log",
+          "stderr": "/home/jiang/lidar.err"
+        },
+        {
+          "name": "obstacle_detector",
+          "path": "/data/cleaner_ws/install_nav/lib/obstacle_detector/",
+          "working_dir": "/data/cleaner_ws/install_nav/lib/obstacle_detector/",
+          "delay": 4000
+        },
+        {
+          "name": "locate_3d_node",
+          "path": "/data/cleaner_ws/install_nav/lib/locate_3d/",
+          "working_dir": "/data/cleaner_ws/install_nav/lib/locate_3d/",
+          "delay": 4000
+        }
+      ]
+    },
     {
       "name": "mode_com",
       "description": "公共模块",
