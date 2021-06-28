@@ -7,5 +7,4 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 REQUIRED Core Network)
 
-add_subdirectory(third_party)
 add_subdirectory(src)

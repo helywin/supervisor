@@ -117,19 +117,31 @@ void SupervisordPrivate::createProcesses()
         for (const auto &object : item["executables"]) {
             auto process = new QProcess(q);
             process->setEnvironment(QProcess::systemEnvironment());
-            qDebug() << process->environment();
             mProcessList[name].append(process);
             QString command;
-            if (object.contains("executor")) {
+            QStringList params;
+            bool hasExecutor = object.contains("executor");
+            if (hasExecutor) {
                 command += QString::fromStdString(object["executor"]) + " ";
+                process->setProperty("executor", true);
+            } else {
+                process->setProperty("executor", false);
             }
-            QString path = QString::fromStdString(object["path"]);
-            if (!path.endsWith('/')) {
-                path += "/";
+            QString path;
+            if (object.contains("path")) {
+                path = QString::fromStdString(object["path"]);
+                if (!path.isEmpty() && !path.endsWith('/')) {
+                    path += "/";
+                }
             }
             QString procName = QString::fromStdString(object["name"]);
             process->setProperty("name", procName);
-            command += path + procName;
+            if (!hasExecutor) {
+                command += path + procName;
+            } else {
+                params.append(path + procName);
+            }
+
             process->setProgram(command);
             if (object.contains("working_dir")) {
                 process->setWorkingDirectory(QString::fromStdString(object["working_dir"]));
@@ -156,7 +168,6 @@ void SupervisordPrivate::createProcesses()
                 process->setProperty("delay", 0);
             }
             if (object.contains("params")) {
-                QStringList params;
                 for (const auto &param: object["params"]) {
                     params << QString::fromStdString(param);
                 }
@@ -186,8 +197,14 @@ void SupervisordPrivate::startProcesses(const QString &mode)
             process->setProperty("manually_close", false);
             int delay = process->property("delay").toInt();
             QTimer::singleShot(delay, [process] {
-                process->start(QIODevice::ReadOnly);
-                std::cout << "start: " << process->program().toStdString() <<
+                if (process->property("executor").toBool()) {
+                    process->start(process->program() + " " + process->arguments().join(' '),
+                                   QIODevice::ReadOnly);
+                } else {
+                    process->start(QIODevice::ReadOnly);
+                }
+                std::cout << "start: " << process->program().toStdString() << " "
+                          << process->arguments().join(' ').toStdString() <<
                           " pid:" << process->pid() << std::endl;
             });
         }

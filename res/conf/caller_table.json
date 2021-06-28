@@ -1,34 +1,49 @@
 {
   "port": 33496,
   "start_ros_core": true,
-  "start": [
-    "agv"
-  ],
+  "start": ["test_ros"],
   "modes": [
+    {
+      "name": "test_ros",
+      "description": "ros",
+      "executables": [
+        {
+          "name": " robot_navigation",
+          "executor": "roslaunch",
+          "path": "",
+          "params": "cleaner_robot_nav.launch"
+        }
+      ]
+    },
     {
       "name": "agv",
       "description": "AGV小车启动",
       "executables": [
         {
+          "name": "controller_serial_node",
+          "path": "/data/cleaner_ws/install_nav/lib/controller_serial",
+          "working_dir": "/data/cleaner_ws/install_nav/lib/controller_serial"
+        },
+        {
           "name": "map_viewer",
           "path": "/data/cleaner_ws/install_nav/lib/global_path_planner",
-          "working_dir":"/data/cleaner_ws/install_nav/lib/global_path_planner",
+          "working_dir": "/data/cleaner_ws/install_nav/lib/global_path_planner",
           "delay": 1000
         },
         {
-          "name": "global_path_planner",
+          "name": "global_planner",
           "path": "/data/cleaner_ws/install_nav/lib/global_path_planner",
-          "working_dir":"/data/cleaner_ws/install_nav/lib/global_path_planner",
+          "working_dir": "/data/cleaner_ws/install_nav/lib/global_path_planner",
           "delay": 1000
         },
         {
           "name": "rslidar_sdk_node_xyzir",
           "path": "/data/cleaner_ws/install_nav/lib/lidar_receiver",
-          "working_dir":"/data/cleaner_ws/install_nav/lib/lidar_receiver",
-          "params": ["middlemiddletop"],
-          "delay": 1000,
-          "stdout": "/home/jiang/lidar.log",
-          "stderr": "/home/jiang/lidar.err"
+          "working_dir": "/data/cleaner_ws/install_nav/lib/lidar_receiver",
+          "params": [
+            "middlemiddletop"
+          ],
+          "delay": 1000
         },
         {
           "name": "obstacle_detector",
@@ -66,13 +81,14 @@
         {
           "name": "garbage_ui",
           "path": "/home/jiang/code/garbage_ui/src/garbage_ui/build/debug/devel/lib/garbage_ui",
+          "working_dir": "/home/jiang/code/garbage_ui/src/garbage_ui/build/debug/devel/lib/garbage_ui",
           "stdout": "/home/jiang/garbage.log",
           "stderr": "/home/jiang/garbage.err"
         }
       ]
     },
     {
-      "name": "mode_1",
+      "name": "car_1",
       "description": "行车1的模块",
       "executables": [
         {
@@ -128,7 +144,7 @@
       ]
     },
     {
-      "name": "mode_2",
+      "name": "car_2",
       "description": "行车2的模块",
       "variables": {
         "car_dir": "/data/garbage_auto_ws/car_2"
