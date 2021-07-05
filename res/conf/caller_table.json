@@ -1,24 +1,17 @@
 {
   "port": 33496,
   "start_ros_core": true,
-  "start": ["test_ros"],
+  "start": ["mode_com"],
   "modes": [
-    {
-      "name": "test_ros",
-      "description": "ros",
-      "executables": [
-        {
-          "name": " robot_navigation",
-          "executor": "roslaunch",
-          "path": "",
-          "params": "cleaner_robot_nav.launch"
-        }
-      ]
-    },
     {
       "name": "agv",
       "description": "AGV小车启动",
       "executables": [
+        {
+          "name": "PTZControl",
+          "path": "/data/cleaner_ws/install_nav/lib/control_holder",
+          "working_dir": "/data/cleaner_ws/install_nav/lib/control_holder"
+        },
         {
           "name": "controller_serial_node",
           "path": "/data/cleaner_ws/install_nav/lib/controller_serial",
@@ -56,6 +49,12 @@
           "path": "/data/cleaner_ws/install_nav/lib/locate_3d/",
           "working_dir": "/data/cleaner_ws/install_nav/lib/locate_3d/",
           "delay": 4000
+        },
+        {
+          "name": "local_planner",
+          "path": "/data/cleaner_ws/install_nav/lib/local_planner_node",
+          "working_dir": "/data/cleaner_ws/install_nav/lib/local_planner_node",
+          "delay": 1000
         }
       ]
     },
@@ -66,139 +65,69 @@
         {
           "name": "livox_ros_driver_node",
           "path": "/data/garbage_auto_ws/install/lib/livox_ros_driver/",
-          "restart": false
+          "working_dir": "/data/garbage_auto_ws/install/lib/livox_ros_driver/"
         },
         {
-          "name": "TaskFinishExcel.py",
-          "path": "/data/garbage_auto_ws/install/lib/Save_Excel/",
-          "executor": "python2"
-        },
-        {
-          "name": "SysFauStatusExcel.py",
-          "path": "/data/garbage_auto_ws/install/lib/Save_Excel/",
-          "executor": "python2"
+          "name": "fault_monitor",
+          "path": "/data/garbage_auto_ws/install/lib/fault_monitor/",
+          "working_dir": "/data/garbage_auto_ws/install/lib/livox_ros_driver/"
         },
         {
           "name": "garbage_ui",
-          "path": "/home/jiang/code/garbage_ui/src/garbage_ui/build/debug/devel/lib/garbage_ui",
-          "working_dir": "/home/jiang/code/garbage_ui/src/garbage_ui/build/debug/devel/lib/garbage_ui",
-          "stdout": "/home/jiang/garbage.log",
-          "stderr": "/home/jiang/garbage.err"
+          "path": "/data/garbage_auto_ws/install/lib/garbage_ui",
+          "working_dir": "/data/garbage_auto_ws/install/lib/garbage_ui"
         }
       ]
     },
     {
-      "name": "car_1",
+      "name": "crane_1",
       "description": "行车1的模块",
+      "pre_exec": [
+        "rosparam load /data/garbage_auto_ws/car_1/conf/octomap_bev.yaml",
+        "rosparam load /data/garbage_auto_ws/car_1/conf/map_convert.yaml",
+        "rosparam load /data/garbage_auto_ws/car_1/conf/grab_detector.yaml"
+      ],
       "executables": [
         {
-          "name": "fault_monitor",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/fault_monitor/"
+          "name": "octomap_bev_node",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/fault_monitor/",
+          "params": ["1"]
         },
         {
-          "name": "perception",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/perception/"
+          "name": "map_convert_node",
+          "path": "/data/garbage_auto_ws/install/lib/laser_point_convert/",
+          "params": ["1"]
         },
         {
-          "name": "task_planner",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/task_planner/"
-        },
-        {
-          "name": "grab_weight_publish",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/grab_weight_publish/"
-        },
-        {
-          "name": "ocr_detector.py",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/grab_image_detector/",
-          "executor": "python3",
-          "params": ""
-        },
-        {
-          "name": "burner_volume_detector",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/burner_volume_detector/"
-        },
-        {
-          "name": "laser_info",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/laser_measure/"
-        },
-        {
-          "name": "move_controller",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/move_controller/"
-        },
-        {
-          "name": "move_plc_ctr",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/move_controller/"
-        },
-        {
-          "name": "door_info",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/door_info/"
-        },
-        {
-          "name": "move_monitor_node",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/move_monitor_node/"
-        },
-        {
-          "name": "fault_monitor_ros",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/fault_monitor_ros/"
+          "name": "grab_detector_3d",
+          "path": "/data/garbage_auto_ws/install/lib/grab_detector_3d/",
+          "params": ["1"]
         }
       ]
     },
     {
-      "name": "car_2",
+      "name": "crane_2",
       "description": "行车2的模块",
-      "variables": {
-        "car_dir": "/data/garbage_auto_ws/car_2"
-      },
+      "pre_exec": [
+        "rosparam load /data/garbage_auto_ws/car_2/conf/octomap_bev.yaml",
+        "rosparam load /data/garbage_auto_ws/car_2/conf/map_convert.yaml",
+        "rosparam load /data/garbage_auto_ws/car_2/conf/grab_detector.yaml"
+      ],
       "executables": [
         {
-          "name": "fault_monitor",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/fault_monitor/"
+          "name": "octomap_bev_node",
+          "path": "/data/garbage_auto_ws/car_1/install/lib/fault_monitor/",
+          "params": ["2"]
         },
         {
-          "name": "perception",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/perception/"
+          "name": "map_convert_node",
+          "path": "/data/garbage_auto_ws/install/lib/laser_point_convert/",
+          "params": ["2"]
         },
         {
-          "name": "task_planner",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/task_planner/"
-        },
-        {
-          "name": "grab_weight_publish",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/grab_weight_publish/"
-        },
-        {
-          "name": "ocr_detector.py",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/grab_image_detector/",
-          "executor": "python3",
-          "params": ""
-        },
-        {
-          "name": "burner_volume_detector",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/burner_volume_detector/"
-        },
-        {
-          "name": "laser_info",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/laser_measure/"
-        },
-        {
-          "name": "move_controller",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/move_controller/"
-        },
-        {
-          "name": "move_plc_ctr",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/move_controller/"
-        },
-        {
-          "name": "door_info",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/door_info/"
-        },
-        {
-          "name": "move_monitor_node",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/move_monitor_node/"
-        },
-        {
-          "name": "fault_monitor_ros",
-          "path": "/data/garbage_auto_ws/car_2/install/lib/fault_monitor_ros/"
+          "name": "grab_detector_3d",
+          "path": "/data/garbage_auto_ws/install/lib/grab_detector_3d/",
+          "params": ["2"]
         }
       ]
     }

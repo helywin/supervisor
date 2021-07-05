@@ -30,3 +30,33 @@ tcp查看工具
 ```bash
 sudo tcpdump -i lo -nn -vv -X udp port 33496
 ```
+
+systemd
+
+Lastly, we’re going to see how to run a script with systemd. Similarly to init.d, we need to create a service descriptor – called a unit file – under /etc/systemd/system:
+
+```ini
+[Unit]
+Description=Reboot message systemd service.
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /home/ec2-user/reboot_message.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+The file is organized into different sections:
+
+    Unit – contains general metadata, like a human-readable description
+    Service – describes the process and daemonizing behavior, along with the command to start the service
+    Install – enables the service to run at startup, using the folder specified in WantedBy to handle dependencies
+
+To finish up, we need to set the file permissions to 644 and enable our service by using systemctl:
+
+```
+$ chmod 644 /etc/systemd/system/reboot_message.service
+$ systemctl enable reboot_message.service
+```
+
+One thing to keep in mind is that although many major distributions support systemd, it’s not always available.

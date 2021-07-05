@@ -32,6 +32,7 @@ public:
     QList<QString> mAutoStart;
     QList<QString> mCurrentModes;
     QMap<QString, QList<QProcess *>> mProcessList;
+    QMap<QString, QStringList> mPreExec;
 
     explicit SupervisordPrivate(Supervisord *p);
     void onReadyRead();
@@ -113,6 +114,12 @@ void SupervisordPrivate::createProcesses()
     }
     for (const auto &item : mConf["modes"]) {
         QString name = QString::fromStdString(item["name"]);
+        if (item.contains("pre_exec")) {
+            mPreExec[name] = QStringList();
+            for (const auto &cmd : item["pre_exec"]) {
+                mPreExec[name].append(QString::fromStdString(cmd));
+            }
+        }
         mProcessList[name] = QList<QProcess *>();
         for (const auto &object : item["executables"]) {
             auto process = new QProcess(q);
@@ -173,7 +180,8 @@ void SupervisordPrivate::createProcesses()
                 }
                 process->setArguments(params);
             }
-            std::cout << "create: " << command.toStdString() << std::endl;
+            std::cout << "create: " << command.toStdString() << " "
+                      << params.join(' ').toStdString() << std::endl;
             QObject::connect(process, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>
             (&QProcess::finished), q, &Supervisord::onProcessFinished);
             QObject::connect(process, static_cast<void (QProcess::*)(QProcess::ProcessError)>
@@ -189,6 +197,11 @@ void SupervisordPrivate::startProcesses(const QString &mode)
         return;
     } else {
         mCurrentModes.append(mode);
+    }
+    std::cout << "pre exec: ";
+    for (const auto &cmd : mPreExec[mode]) {
+        std::cout << "  " << cmd.toStdString() << std::endl;
+        QProcess::startDetached(cmd);
     }
     for (auto process : mProcessList[mode]) {
         if (process->property("detach").toBool()) {
