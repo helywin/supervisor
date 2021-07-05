@@ -17,6 +17,7 @@ public:
     Supervisord(int argc, char *argv[]);
     ~Supervisord() override;
     int exec();
+    void stop();
 
 private slots:
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);

@@ -40,6 +40,7 @@ public:
     void startProcesses(const QString &mode);
     void stopProcesses(const QString &mode);
     void stopAllProcesses();
+    void killAllProcesses();
     void prepare();
 };
 
@@ -245,11 +246,17 @@ void SupervisordPrivate::stopAllProcesses()
         for (auto process : list) {
             if (process->isOpen()) {
                 process->setProperty("manually_close", true);
+                process->kill();
                 process->close();
             }
         }
     }
     mCurrentModes.clear();
+}
+
+void SupervisordPrivate::killAllProcesses()
+{
+
 }
 
 void SupervisordPrivate::prepare()
@@ -337,9 +344,39 @@ void Supervisord::onErrorOccurred(QProcess::ProcessError error)
               << "error: " << process->errorString().toStdString() << std::endl;
 }
 
+void Supervisord::stop()
+{
+    Q_D(Supervisord);
+    d->killAllProcesses();
+}
+
+std::shared_ptr<Supervisord> sp;
+
+void sigHandler(int sig)
+{
+    std::string sigStr;
+    switch (sig) {
+        case SIGINT: sigStr = "SIGINT"; break;
+        case SIGILL: sigStr = "SIGILL"; break;
+        case SIGABRT: sigStr = "SIGABRT"; break;
+        case SIGFPE: sigStr = "SIGFPE"; break;
+        case SIGSEGV: sigStr = "SIGSEGV"; break;
+        case SIGTERM: sigStr = "SIGTERM"; break;
+    }
+    std::cout << "accept signal: " << sigStr << std::endl;
+    sp->stop();
+    exit(-1);
+}
+
 int main(int argc, char *argv[])
 {
     std::cout << "current pid: " << getpid() << std::endl;
-    Supervisord daemon(argc, argv);
-    return daemon.exec();
+    sp = std::make_shared<Supervisord>(argc, argv);
+    signal(SIGINT, sigHandler);
+    signal(SIGILL, sigHandler);
+    signal(SIGABRT, sigHandler);
+    signal(SIGFPE, sigHandler);
+    signal(SIGSEGV, sigHandler);
+    signal(SIGTERM, sigHandler);
+    return sp->exec();
 }
