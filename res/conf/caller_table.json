@@ -64,18 +64,18 @@
       "executables": [
         {
           "name": "livox_ros_driver_node",
-          "path": "/data/garbage_auto_ws/install/lib/livox_ros_driver/",
-          "working_dir": "/data/garbage_auto_ws/install/lib/livox_ros_driver/"
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/livox_ros_driver/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/livox_ros_driver/"
         },
         {
           "name": "fault_monitor",
-          "path": "/data/garbage_auto_ws/install/lib/fault_monitor/",
-          "working_dir": "/data/garbage_auto_ws/install/lib/livox_ros_driver/"
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/fault_monitor/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/livox_ros_driver/"
         },
         {
           "name": "garbage_ui",
-          "path": "/data/garbage_auto_ws/install/lib/garbage_ui",
-          "working_dir": "/data/garbage_auto_ws/install/lib/garbage_ui"
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/garbage_ui",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/garbage_ui"
         }
       ]
     },
@@ -83,24 +83,40 @@
       "name": "crane_1",
       "description": "行车1的模块",
       "pre_exec": [
-        "rosparam load /data/garbage_auto_ws/car_1/conf/octomap_bev.yaml",
-        "rosparam load /data/garbage_auto_ws/car_1/conf/map_convert.yaml",
-        "rosparam load /data/garbage_auto_ws/car_1/conf/grab_detector.yaml"
+        "rosparam load /data/garbage_auto_ws_binhaihuodian_yalv/car_1/conf/octomap_server.yaml",
+        "rosparam load /data/garbage_auto_ws_binhaihuodian_yalv/car_1/conf/octomap_bev.yaml",
+        "rosparam load /data/garbage_auto_ws_binhaihuodian_yalv/car_1/conf/map_convert.yaml",
+        "rosparam load /data/garbage_auto_ws_binhaihuodian_yalv/car_1/conf/grab_detector.yaml"
       ],
       "executables": [
         {
+          "name": "octomap_server_node",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/octomap_server/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/octomap_server/",
+          "params": ["1"]
+        },
+        {
           "name": "octomap_bev_node",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/fault_monitor/",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/octomap_3d/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/octomap_3d/",
           "params": ["1"]
         },
         {
           "name": "map_convert_node",
-          "path": "/data/garbage_auto_ws/install/lib/laser_point_convert/",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/laser_point_convert/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/laser_point_convert/",
           "params": ["1"]
         },
         {
           "name": "grab_detector_3d",
-          "path": "/data/garbage_auto_ws/install/lib/grab_detector_3d/",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/grab_detector_3d/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/grab_detector_3d/",
+          "params": ["1"]
+        },
+        {
+          "name": "livox_ros_driver_node",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/livox_ros_driver/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/livox_ros_driver/",
           "params": ["1"]
         }
       ]
@@ -109,24 +125,40 @@
       "name": "crane_2",
       "description": "行车2的模块",
       "pre_exec": [
-        "rosparam load /data/garbage_auto_ws/car_2/conf/octomap_bev.yaml",
-        "rosparam load /data/garbage_auto_ws/car_2/conf/map_convert.yaml",
-        "rosparam load /data/garbage_auto_ws/car_2/conf/grab_detector.yaml"
+        "rosparam load /data/garbage_auto_ws_binhaihuodian_yalv/car_2/conf/octomap_server.yaml",
+        "rosparam load /data/garbage_auto_ws_binhaihuodian_yalv/car_2/conf/octomap_bev.yaml",
+        "rosparam load /data/garbage_auto_ws_binhaihuodian_yalv/car_2/conf/map_convert.yaml",
+        "rosparam load /data/garbage_auto_ws_binhaihuodian_yalv/car_2/conf/grab_detector.yaml"
       ],
       "executables": [
         {
+          "name": "octomap_server_node",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/octomap_server/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/octomap_server/",
+          "params": ["2"]
+        },
+        {
           "name": "octomap_bev_node",
-          "path": "/data/garbage_auto_ws/car_1/install/lib/fault_monitor/",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/octomap_3d/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/octomap_3d/",
           "params": ["2"]
         },
         {
           "name": "map_convert_node",
-          "path": "/data/garbage_auto_ws/install/lib/laser_point_convert/",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/laser_point_convert/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/laser_point_convert/",
           "params": ["2"]
         },
         {
           "name": "grab_detector_3d",
-          "path": "/data/garbage_auto_ws/install/lib/grab_detector_3d/",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/grab_detector_3d/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/grab_detector_3d/",
+          "params": ["2"]
+        },
+        {
+          "name": "livox_ros_driver_node",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/livox_ros_driver/",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/livox_ros_driver/",
           "params": ["2"]
         }
       ]

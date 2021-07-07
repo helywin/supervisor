@@ -2,8 +2,9 @@ add_executable(supervd
         Supervisord.hpp
         Supervisord.cpp)
 
-
-include(/home/jiang/code/third_party/thirdParty.cmake)
+if (${CMAKE_ALONE})
+    include(../../../third_party/thirdParty.cmake)
+endif ()
 
 target_link_libraries(supervd
         Qt5::Core

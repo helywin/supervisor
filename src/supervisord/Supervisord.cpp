@@ -194,12 +194,13 @@ void SupervisordPrivate::createProcesses()
 
 void SupervisordPrivate::startProcesses(const QString &mode)
 {
+    std::cout << "---------------------------------------------------" << std::endl;
     if (mCurrentModes.contains(mode)) {
         return;
     } else {
         mCurrentModes.append(mode);
     }
-    std::cout << "pre exec: ";
+    std::cout << "pre exec: " << std::endl;
     for (const auto &cmd : mPreExec[mode]) {
         std::cout << "  " << cmd.toStdString() << std::endl;
         QProcess::startDetached(cmd);
@@ -227,6 +228,7 @@ void SupervisordPrivate::startProcesses(const QString &mode)
 
 void SupervisordPrivate::stopProcesses(const QString &mode)
 {
+    std::cout << "---------------------------------------------------" << std::endl;
     if (!mCurrentModes.contains(mode)) {
         return;
     } else {
@@ -235,9 +237,11 @@ void SupervisordPrivate::stopProcesses(const QString &mode)
     for (auto process : mProcessList[mode]) {
         if (process->isOpen()) {
             process->setProperty("manually_close", true);
+            process->kill();
             process->close();
         }
     }
+    std::cout << "---------------------------------------------------" << std::endl;
 }
 
 void SupervisordPrivate::stopAllProcesses()
@@ -356,12 +360,24 @@ void sigHandler(int sig)
 {
     std::string sigStr;
     switch (sig) {
-        case SIGINT: sigStr = "SIGINT"; break;
-        case SIGILL: sigStr = "SIGILL"; break;
-        case SIGABRT: sigStr = "SIGABRT"; break;
-        case SIGFPE: sigStr = "SIGFPE"; break;
-        case SIGSEGV: sigStr = "SIGSEGV"; break;
-        case SIGTERM: sigStr = "SIGTERM"; break;
+        case SIGINT:
+            sigStr = "SIGINT";
+            break;
+        case SIGILL:
+            sigStr = "SIGILL";
+            break;
+        case SIGABRT:
+            sigStr = "SIGABRT";
+            break;
+        case SIGFPE:
+            sigStr = "SIGFPE";
+            break;
+        case SIGSEGV:
+            sigStr = "SIGSEGV";
+            break;
+        case SIGTERM:
+            sigStr = "SIGTERM";
+            break;
     }
     std::cout << "accept signal: " << sigStr << std::endl;
     sp->stop();
