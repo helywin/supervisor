@@ -7,6 +7,7 @@
 #include <QCoreApplication>
 #include <iostream>
 #include <fstream>
+#include <thread>
 #include <QUdpSocket>
 #include <QHostAddress>
 #include <QProcess>
@@ -110,6 +111,12 @@ void SupervisordPrivate::onReadyRead()
 void SupervisordPrivate::createProcesses()
 {
     Q_Q(Supervisord);
+    if (!mConf.contains("start_ros_core")) {
+        mConf["start_ros_core"] = false;
+    }
+    if (!mConf.contains("roscore_delay")) {
+        mConf["roscore_delay"] = 0;
+    }
     for (const auto &item : mConf["start"]) {
         mAutoStart.append(QString::fromStdString(item));
     }
@@ -314,6 +321,7 @@ int Supervisord::exec()
     QCoreApplication app(d->mArgc, d->mArgv);
     if (d->mConf.contains("start_ros_core") && d->mConf["start_ros_core"].get<bool>()) {
         system("gnome-terminal -x bash -c 'roscore'&");
+        std::this_thread::sleep_for(std::chrono::milliseconds(d->mConf["roscore_delay"]));
     }
     QTimer::singleShot(100, [this] {
         d_ptr->prepare();

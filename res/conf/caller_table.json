@@ -1,7 +1,8 @@
 {
   "port": 33496,
-  "start_ros_core": true,
-  "start": ["mode_com"],
+  "start_ros_core": false,
+  "roscore_delay": 2000,
+  "start": ["agv"],
   "modes": [
     {
       "name": "agv",
