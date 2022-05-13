@@ -1,6 +1,5 @@
 {
   "port": 33496,
-  "host": "172.30.0.10",
   "start_ros_core": false,
   "roscore_delay": 2000,
   "start": ["mode_com"],
@@ -78,6 +77,12 @@
           "name": "garbage_ui",
           "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/garbage_ui",
           "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/garbage_ui"
+        },
+        {
+          "name": "dataCollection.py",
+          "executor": "python2",
+          "path": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/material_management",
+          "working_dir": "/data/garbage_auto_ws_binhaihuodian_yalv/install/lib/material_management"
         }
       ]
     },
