@@ -9,6 +9,10 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt5 REQUIRED Core Network)
 find_package(Boost REQUIRED system)
+# https://github.com/jarro2783/cxxopts
 find_package(cxxopts REQUIRED)
+# https://github.com/ArthurSonzogni/FTXUI
+find_package(ftxui REQUIRED)
 
 add_subdirectory(src)
+add_subdirectory(test)

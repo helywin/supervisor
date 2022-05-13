@@ -7,4 +7,7 @@ target_link_libraries(supervd
         Qt5::Network
         cxxopts::cxxopts
         ${Boost_LIBRARIES}
+        ftxui::screen
+        ftxui::dom
+        ftxui::component
         )
