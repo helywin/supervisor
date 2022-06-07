@@ -6,9 +6,6 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QHostAddress>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QProcess>
 #include <QTimer>
 #include <QUdpSocket>
@@ -22,6 +19,7 @@
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <unistd.h>
+#include "QStringJson.hpp"
 
 using json = nlohmann::json;
 
@@ -63,53 +61,50 @@ void SupervisordPrivate::onReadyRead()
 {
     while (mSocket->hasPendingDatagrams()) {
         std::cout << "recv datagram" << std::endl;
-        QByteArray array;
-        array.resize((int) mSocket->pendingDatagramSize());
+        std::string array(mSocket->pendingDatagramSize(), 0);
         QHostAddress address;
         quint16 port;
-        mSocket->readDatagram(array.data(), array.size(), &address, &port);
-        QJsonDocument doc = QJsonDocument::fromJson(array);
-        auto object = doc.object();
-        QJsonObject response;
-        if (!object.contains("command")) {
+        mSocket->readDatagram(array.data(), array.length(), &address, &port);
+        nlohmann::json json = nlohmann::json::parse(array);
+        nlohmann::json response;
+        if (!json.contains("command")) {
             response["error"] = true;
             response["error_string"] = "不包含命令报文";
-        } else if (object["command"] == "query") {
+        } else if (json["command"] == "query") {
 
-        } else if (object["command"] == "control") {
-            if (!object.contains("mode_name") || !object.contains("enable")) {
+        } else if (json["command"] == "control") {
+            if (!json.contains("mode_name") || !json.contains("enable")) {
                 std::cout << "bad json object" << std::endl;
                 return;
             }
-            if (!mProcessList.contains(object["mode_name"].toString())) {
-                std::cout << "mode not exist " << object["mode_name"].toString().toStdString()
-                          << std::endl;
+            if (!mProcessList.contains(json["mode_name"])) {
+                std::cout << "mode not exist " << json["mode_name"] << std::endl;
                 return;
             }
-            if (object["enable"].toBool()) {
-                startProcesses(object["mode_name"].toString());
+            if (json["enable"].get<bool>()) {
+                startProcesses(json["mode_name"]);
             } else {
-                stopProcesses(object["mode_name"].toString());
+                stopProcesses(json["mode_name"]);
             }
         } else {
             response["error"] = true;
             response["error_string"] = "报文命令错误";
         }
 
-        QJsonArray total;
+        nlohmann::json total;
         for (const auto &key: mProcessList.keys()) {
-            total.append(key);
+            total.emplace_back(key);
         }
-        QJsonArray enabled;
+        nlohmann::json enabled;
         for (const auto &key: mCurrentModes) {
-            enabled.append(key);
+            enabled.emplace_back(key);
         }
-        QJsonObject status;
-        status["total"] = total;
-        status["enabled"] = enabled;
-        response["status"] = status;
-        QJsonDocument sendDoc(response);
-        mSocket->writeDatagram(sendDoc.toJson(), address, port);
+        response["status"] = {
+                {"total", total},
+                {"enabled", enabled},
+        };
+        std::string data = response.dump(4);
+        mSocket->writeDatagram(data.data(), data.length(), address, port);
     }
 }
 
@@ -123,7 +118,7 @@ void SupervisordPrivate::createProcesses()
         CONF["roscore_delay"] = 0;
     }
     for (const auto &item: CONF["modes"]) {
-        QString name = QString::fromStdString(item["name"]);
+        QString name = item["name"];
         if (item.contains("pre_exec")) {
             mPreExec[name] = QStringList();
             for (const auto &cmd: item["pre_exec"]) {
@@ -161,7 +156,7 @@ void SupervisordPrivate::createProcesses()
 
             process->setProgram(command);
             if (object.contains("working_dir")) {
-                process->setWorkingDirectory(QString::fromStdString(object["working_dir"]));
+                process->setWorkingDirectory(object["working_dir"]);
             }
             if (object.contains("detach")) {
                 process->setProperty("detach", QString::fromStdString(object["detach"]));
