@@ -10,17 +10,28 @@
 #ifndef SUPERVISOR_QSTRINGJSON_HPP
 #define SUPERVISOR_QSTRINGJSON_HPP
 
-#include <nlohmann/json.hpp>
 #include <QString>
+#include <nlohmann/json.hpp>
 
 
-
-void to_json(nlohmann::json& j, const QString& s) {
+void to_json(nlohmann::json &j, const QString &s)
+{
     j = s.toStdString();
 }
 
-void from_json(const nlohmann::json& j, QString& p) {
+void from_json(const nlohmann::json &j, QString &p)
+{
     p = QString::fromStdString(j.get<std::string>());
+}
+
+void to_json(nlohmann::json &j, const QStringList &list)
+{
+    std::for_each(list.begin(), list.end(), [&j](auto &v) { j.push_back(v); });
+}
+
+void from_json(const nlohmann::json &j, QStringList &list)
+{
+    std::for_each(j.begin(), j.end(), [&list](auto &v) { list.append(QString::fromStdString(v)); });
 }
 
 #endif//SUPERVISOR_QSTRINGJSON_HPP

@@ -3,6 +3,7 @@
 //
 
 #include "Supervisord.hpp"
+#include "QStringJson.hpp"
 #include <QCoreApplication>
 #include <QFile>
 #include <QHostAddress>
@@ -19,7 +20,6 @@
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <unistd.h>
-#include "QStringJson.hpp"
 
 using json = nlohmann::json;
 
@@ -29,6 +29,19 @@ json CONF;
 std::string MODE;
 QVector<QString> AUTO_START_LIST;
 
+struct ProcessConfig
+{
+    QString executor;
+    QString path;
+    QString name;
+    QString working_dir;
+    bool detach;
+    QString stdout;
+    QString stderr;
+    bool restart;
+    int delay;
+    QStringList params;
+};
 
 class SupervisordPrivate
 {
@@ -114,6 +127,9 @@ void SupervisordPrivate::createProcesses()
     if (!CONF.contains("start_ros_core")) {
         CONF["start_ros_core"] = false;
     }
+    if (!CONF.contains("terminal_cmd")) {
+        CONF["terminal_cmd"] = "gnome-terminal -x bash -c \"%1\"";
+    }
     if (!CONF.contains("roscore_delay")) {
         CONF["roscore_delay"] = 0;
     }
@@ -130,14 +146,14 @@ void SupervisordPrivate::createProcesses()
             auto process = new QProcess(q);
             process->setEnvironment(QProcess::systemEnvironment());
             mProcessList[name].append(process);
-            QString command;
-            QStringList params;
+            QStringList command;
+            bool terminal = false;
+            if (object.contains("terminal")) {
+                terminal = true;
+            }
             bool hasExecutor = object.contains("executor");
             if (hasExecutor) {
-                command += QString::fromStdString(object["executor"]) + " ";
-                process->setProperty("executor", true);
-            } else {
-                process->setProperty("executor", false);
+                command << QString::fromStdString(object["executor"]);
             }
             QString path;
             if (object.contains("path")) {
@@ -148,13 +164,9 @@ void SupervisordPrivate::createProcesses()
             }
             QString procName = QString::fromStdString(object["name"]);
             process->setProperty("name", procName);
-            if (!hasExecutor) {
-                command += path + procName;
-            } else {
-                params.append(path + procName);
-            }
+            command << path + procName;
 
-            process->setProgram(command);
+            //            process->setProgram(command);
             if (object.contains("working_dir")) {
                 process->setWorkingDirectory(object["working_dir"]);
             }
@@ -181,12 +193,15 @@ void SupervisordPrivate::createProcesses()
             }
             if (object.contains("params")) {
                 for (const auto &param: object["params"]) {
-                    params << QString::fromStdString(param);
+                    command << QString::fromStdString(param);
                 }
-                process->setArguments(params);
             }
-            std::cout << "create: " << command.toStdString() << " "
-                      << params.join(' ').toStdString() << std::endl;
+            QString fullCommand = command.join(' ');
+            if (terminal) {
+                fullCommand = QString::fromStdString(CONF["terminal_cmd"]).arg(fullCommand);
+            }
+            process->setProperty("command", fullCommand);
+            std::cout << "create: " << fullCommand.toStdString() << std::endl;
             QObject::connect(
                     process,
                     static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
@@ -215,19 +230,14 @@ void SupervisordPrivate::startProcesses(const QString &mode)
     }
     for (auto process: mProcessList[mode]) {
         if (process->property("detach").toBool()) {
-            QProcess::startDetached(process->program());
+            QProcess::startDetached(process->property("command").toString());
         } else {
             process->setProperty("manually_close", false);
             int delay = process->property("delay").toInt();
             QTimer::singleShot(delay, [process] {
-                if (process->property("executor").toBool()) {
-                    process->start(process->program() + " " + process->arguments().join(' '),
-                                   QIODevice::ReadOnly);
-                } else {
-                    process->start(QIODevice::ReadOnly);
-                }
-                std::cout << "start: " << process->program().toStdString() << " "
-                          << process->arguments().join(' ').toStdString()
+                process->start(process->property("command").toString(),
+                               QIODevice::ReadOnly);
+                std::cout << "start: " << process->property("command").toString().toStdString()
                           << " pid:" << process->pid() << std::endl;
             });
         }
