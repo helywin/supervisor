@@ -10,6 +10,7 @@
 #include <QProcess>
 #include <QTimer>
 #include <QUdpSocket>
+#include <QRegExp>
 #include <algorithm>
 #include <boost/process.hpp>
 #include <cstdio>
@@ -28,6 +29,38 @@ std::string JSON_FILE = "/data/caller_table.json";
 json CONF;
 std::string MODE;
 QVector<QString> AUTO_START_LIST;
+
+std::string &replace_all(std::string &src, const std::string &old_value,
+                         const std::string &new_value)
+{
+    // 每次重新定位起始位置，防止上轮替换后的字符串形成新的old_value
+    for (std::string::size_type pos(0); pos != std::string::npos; pos += new_value.length()) {
+        if ((pos = src.find(old_value, pos)) != std::string::npos) {
+            src.replace(pos, old_value.length(), new_value);
+        } else {
+            break;
+        };
+    }
+    return src;
+}
+
+std::string parseEnv(std::string s)
+{
+    std::regex regex(R"(\$\{(.*?)\})");
+    auto words_begin = std::sregex_iterator(s.begin(), s.end(), regex);
+    auto words_end = std::sregex_iterator();
+
+    for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+        const std::smatch &match = *i;
+        assert(match.size() == 2);
+        const char *env = std::getenv(match[1].str().c_str());
+        if (!env) {
+            qWarning() << "环境变量不存在:" << QString::fromStdString(match[1].str());
+        }
+        replace_all(s, match[0].str(), env);
+    }
+    return s;
+}
 
 struct ProcessConfig
 {
@@ -66,7 +99,7 @@ public:
 };
 
 SupervisordPrivate::SupervisordPrivate(Supervisord *p) :
-    q_ptr(p)
+        q_ptr(p)
 {}
 
 
@@ -113,7 +146,7 @@ void SupervisordPrivate::onReadyRead()
             enabled.emplace_back(key);
         }
         response["status"] = {
-                {"total", total},
+                {"total",   total},
                 {"enabled", enabled},
         };
         std::string data = response.dump(4);
@@ -138,7 +171,7 @@ void SupervisordPrivate::createProcesses()
         if (item.contains("pre_exec")) {
             mPreExec[name] = QStringList();
             for (const auto &cmd: item["pre_exec"]) {
-                mPreExec[name].append(QString::fromStdString(cmd));
+                mPreExec[name].append(QString::fromStdString(parseEnv(cmd)));
             }
         }
         mProcessList[name] = QList<QProcess *>();
@@ -157,7 +190,7 @@ void SupervisordPrivate::createProcesses()
             }
             QString path;
             if (object.contains("path")) {
-                path = QString::fromStdString(object["path"]);
+                path = QString::fromStdString(parseEnv(object["path"]));
                 if (!path.isEmpty() && !path.endsWith('/')) {
                     path += "/";
                 }
@@ -168,7 +201,8 @@ void SupervisordPrivate::createProcesses()
 
             //            process->setProgram(command);
             if (object.contains("working_dir")) {
-                process->setWorkingDirectory(object["working_dir"]);
+                process->setWorkingDirectory(
+                        QString::fromStdString(parseEnv(object["working_dir"])));
             }
             if (object.contains("detach")) {
                 process->setProperty("detach", QString::fromStdString(object["detach"]));
@@ -276,7 +310,8 @@ void SupervisordPrivate::stopAllProcesses()
     mCurrentModes.clear();
 }
 
-void SupervisordPrivate::killAllProcesses() {}
+void SupervisordPrivate::killAllProcesses()
+{}
 
 void SupervisordPrivate::prepare()
 {
@@ -293,7 +328,7 @@ void SupervisordPrivate::prepare()
 }
 
 Supervisord::Supervisord(int argc, char **argv) :
-    d_ptr(new SupervisordPrivate(this))
+        d_ptr(new SupervisordPrivate(this))
 {
     Q_D(Supervisord);
     d->mArgc = argc;
@@ -394,10 +429,10 @@ int main(int argc, char *argv[])
     cxxopts::Options options("supervisord", "ros process starter and manager");
     // clang-format off
     options.add_options()
-        ("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
-        ("s,select", "Select process group to start")
-        ("f,file", "Start specified json file to start", cxxopts::value<std::string>())
-        ("h,help", "Print usage");
+            ("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
+            ("s,select", "Select process group to start")
+            ("f,file", "Start specified json file to start", cxxopts::value<std::string>())
+            ("h,help", "Print usage");
     // clang-format on
     auto result = options.parse(argc, argv);
     if (result.count("help")) {

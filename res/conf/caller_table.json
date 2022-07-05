@@ -11,7 +11,7 @@
       "executables": [
         {
           "name": "PTZControl",
-          "path": "/data/cleaner_ws/install_nav/lib/control_holder",
+          "path": "${ROBOT_HOME}/install_nav/lib/control_holder",
           "working_dir": "/data/cleaner_ws/install_nav/lib/control_holder"
         },
         {
