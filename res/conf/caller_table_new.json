@@ -1,0 +1,118 @@
+{
+  "port": 33496,
+  "start_ros_core": false,
+  "roscore_delay": 2000,
+  "start": ["run"],
+  "modes": [
+    {
+      "name": "collect",
+      "description": "数据采集建图",
+      "executables": [
+        {
+          "name": "controller_serial",
+          "path": "${ROBOT_HOME}/install/lib/controller_serial",
+          "working_dir": "${ROBOT_HOME}/install/lib/controller_serial"
+        },
+        {
+          "name": "imu_driver_node",
+          "path": "${ROBOT_HOME}/install/lib/imu_driver",
+          "working_dir": "${ROBOT_HOME}/install/lib/imu_driver"
+        },
+        {
+          "name": "rslidar_sdk_xyzir",
+          "path": "${ROBOT_HOME}/install/lib/rslidar_sdk",
+          "working_dir": "${ROBOT_HOME}/install/lib/rslidar_sdk",
+          "params": [
+            "middlemiddletop"
+          ],
+          "delay": 1000
+        }
+      ]
+    },
+    {
+      "name": "run",
+      "description": "run program",
+      "pre_exec": [
+        "rosparam load ${ROBOT_HOME}/conf/move_controller/move_controller.yaml",
+        "rosparam load ${ROBOT_HOME}/conf/locate_3d/locate_3d.yaml",
+        "rosparam load ${ROBOT_HOME}/install/share/agv_move/agv_move_param_config.yaml",
+        "rosparam load ${ROBOT_HOME}/install/share/robot_navigation/config/robot_car/local_planner_inside.yaml"
+      ],
+      "executables": [
+        {
+          "name": "controller_serial",
+          "path": "${ROBOT_HOME}/install/lib/controller_serial",
+          "working_dir": "${ROBOT_HOME}/install/lib/controller_serial"
+        },
+        {
+          "name": "agv_move_node",
+          "path": "${ROBOT_HOME}/install/lib/agv_move",
+          "working_dir": "${ROBOT_HOME}/install/lib/agv_move"
+        },
+        {
+          "name": "map_viewer",
+          "path": "${ROBOT_HOME}/install/lib/global_planner",
+          "working_dir": "${ROBOT_HOME}/install/lib/global_planner",
+          "delay": 1000
+        },
+        {
+          "name": "global_planner",
+          "path": "${ROBOT_HOME}/install/lib/global_planner",
+          "working_dir": "${ROBOT_HOME}/install/lib/global_planner",
+          "delay": 1000
+        },
+        {
+          "name": "path_builder",
+          "path": "${ROBOT_HOME}/install/lib/global_planner",
+          "working_dir": "${ROBOT_HOME}/install/lib/global_planner",
+          "delay": 1000
+        },
+        {
+          "name": "task_dispatcher",
+          "path": "${ROBOT_HOME}/install/lib/task_dispatcher",
+          "working_dir": "${ROBOT_HOME}/install/lib/task_dispatcher",
+          "delay": 1000
+        },
+        {
+          "name": "rslidar_sdk_xyzir",
+          "path": "${ROBOT_HOME}/install/lib/rslidar_sdk",
+          "working_dir": "${ROBOT_HOME}/install/lib/rslidar_sdk",
+          "params": [
+            "middlemiddletop"
+          ],
+          "delay": 1000
+        },
+        {
+          "name": "locate_3d",
+          "path": "${ROBOT_HOME}/install/lib/locate_3d/",
+          "working_dir": "${ROBOT_HOME}/install/lib/locate_3d/",
+          "delay": 4000
+        },
+        {
+          "name": "obstacle_detector",
+          "path": "${ROBOT_HOME}/install/lib/obstacle_detector/",
+          "working_dir": "${ROBOT_HOME}/install/lib/obstacle_detector/",
+          "delay": 4000
+        },
+        {
+          "name": "robotnik_pp_planner",
+          "path": "${ROBOT_HOME}/install/lib/robotnik_pp_planner/",
+          "working_dir": "${ROBOT_HOME}/install/lib/robotnik_pp_planner/",
+          "delay": 1000
+        },
+        {
+          "name": "local_planner",
+          "path": "${ROBOT_HOME}/install/lib/local_planner/",
+          "working_dir": "${ROBOT_HOME}/install/lib/local_planner/",
+          "delay": 1000
+        },
+        {
+          "name": "serial_ptz",
+          "path": "${ROBOT_HOME}/install/lib/serial_ptz/",
+          "working_dir": "${ROBOT_HOME}/install/lib/serial_ptz/",
+          "delay": 100
+        }
+      ]
+    }
+  ]
+}
