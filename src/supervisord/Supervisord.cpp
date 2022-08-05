@@ -161,7 +161,7 @@ void SupervisordPrivate::createProcesses()
         CONF["start_ros_core"] = false;
     }
     if (!CONF.contains("terminal_cmd")) {
-        CONF["terminal_cmd"] = "gnome-terminal -x bash -c \"%1\"";
+        CONF["terminal_cmd"] = "gnome-terminal --title \"%1\" -x bash -c \"%2\"";
     }
     if (!CONF.contains("roscore_delay")) {
         CONF["roscore_delay"] = 0;
@@ -174,7 +174,7 @@ void SupervisordPrivate::createProcesses()
                 mPreExec[name].append(QString::fromStdString(parseEnv(cmd)));
             }
         }
-        mProcessList[name] = QList<QProcess *>();
+        mProcessList[name] = QList < QProcess * > ();
         for (const auto &object: item["executables"]) {
             auto process = new QProcess(q);
             process->setEnvironment(QProcess::systemEnvironment());
@@ -232,7 +232,8 @@ void SupervisordPrivate::createProcesses()
             }
             QString fullCommand = command.join(' ');
             if (terminal) {
-                fullCommand = QString::fromStdString(CONF["terminal_cmd"]).arg(fullCommand);
+                fullCommand = QString::fromStdString(CONF["terminal_cmd"])
+                        .arg(procName, fullCommand);
             }
             process->setProperty("command", fullCommand);
             std::cout << "create: " << fullCommand.toStdString() << std::endl;

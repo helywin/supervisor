@@ -10,6 +10,10 @@
       "description": "AGV小车启动",
       "executables": [
         {
+          "name": "fault_broker",
+          "path": ""
+        },
+        {
           "name": "PTZControl",
           "path": "${ROBOT_HOME}/install_nav/lib/control_holder",
           "working_dir": "/data/cleaner_ws/install_nav/lib/control_holder"
